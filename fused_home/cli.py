@@ -8,9 +8,7 @@ import click
 @click.command()
 def main(args=None):
     """Console script for fused_home."""
-    click.echo("Replace this message by putting your code into "
-               "fused_home.cli.main")
-    click.echo("See click documentation at http://click.pocoo.org/")
+    click.echo("Welcome to Fused Home")
     return 0
 
 
