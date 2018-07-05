@@ -5,6 +5,7 @@ from fused_home.interfaces.color_lamp import ColorLamp
 
 class YeelightWhiteBulb(ColorLamp):
     def __init__(self, ip, model='mono1', port=55443, effect="smooth", duration=300):
+        super(YeelightWhiteBulb, self).__init__(ip, port, model=model, effect=effect, duration=duration)
         self.bulb = yeelight.Bulb(ip, port=port, effect=effect, duration=duration, model=model)
 
     def on(self):
@@ -24,10 +25,14 @@ class YeelightColorBulb(YeelightWhiteBulb):
     def __init__(self, ip, model='color1', port=55443, effect="smooth", duration=300):
         super(YeelightColorBulb, self).__init__(ip, model=model, port=port, effect=effect, duration=duration)
 
-    def set_color(self, red, green, blue, force_on=False):
+    def set_rgb(self, red, green, blue, force_on=False):
         self.bulb.auto_on = force_on
         self.bulb.set_rgb(red, green, blue)
 
     def set_color_temp(self, value, force_on=False):
         self.bulb.auto_on = force_on
         self.bulb.set_color_temp(value)
+
+    def set_hsv(self, hue, saturation, value=None, force_on=False):
+        self.bulb.auto_on = force_on
+        self.bulb.set_hsv(hue, saturation, value)
