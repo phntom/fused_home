@@ -1,0 +1,2 @@
+@reboot nohup /home/pi/fused_home/fused_home/boiler_watchdog.py &
+@reboot nohup /home/pi/fused_home/fused_home/ddns.py &

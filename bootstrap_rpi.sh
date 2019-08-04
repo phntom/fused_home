@@ -8,4 +8,6 @@ git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 git clone https://github.com/phntom/fused_home.git
 
-crontab /home/pi/fused_home/legacy/crontab.txt
+sudo pip3 install -r fused_home/requirements.txt
+
+crontab fused_home/crontab.txt
