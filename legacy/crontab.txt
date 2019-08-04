@@ -1,0 +1,1 @@
+@reboot nohup /home/pi/fused_home/legacy/boiler.sh &

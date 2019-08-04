@@ -285,3 +285,4 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
+!/legacy/boiler.log
