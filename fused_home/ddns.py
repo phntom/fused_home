@@ -35,6 +35,12 @@
 # https://manager.linode.com/dns/resource/domain.com?id=000000
 #                                          Resource ID  ^
 #
+from os.path import expanduser
+from time import sleep, time
+from json import load
+from urllib.parse import urlencode
+from urllib.request import urlretrieve
+
 RESOURCE = "6363291"
 #
 #
@@ -48,7 +54,8 @@ DOMAIN = "114584"
 # Your Linode API key.  You can generate this by going to your profile in the
 # Linode manager.  It should be fairly long.
 #
-KEY = "pp5GTmC3fENFX2aw1L0iBHymK2zmGXTrFJdq5ieegOax9SoG7NTG3fu3WOniG1v8"
+with open(expanduser("~/.linode.key")) as f:
+    KEY = f.read().strip()
 #
 # The URI of a Web service that returns your IP address as plaintext.  You are
 # welcome to leave this at the default value and use mine.  If you want to run
@@ -89,16 +96,9 @@ API = "https://api.linode.com/api/?api_key={0}&resultFormat=JSON"
 #
 DEBUG = False
 
+
 #####################
 # STOP EDITING HERE #
-
-try:
-    from json import load
-    from urllib.parse import urlencode
-    from urllib.request import urlretrieve
-except ImportError:
-    exit("Couldn't import the standard library. Are you running Python 3?")
-
 
 def execute(action, parameters):
     # Execute a query and return a Python dictionary.
@@ -140,6 +140,8 @@ def main():
         if (len(res)) == 0:
             raise Exception("No such resource?".format(RESOURCE))
         public = ip()
+        with open(expanduser('~/ddns.last'), 'w') as w:
+            w.write(str(time()))
         if res["TARGET"] != public:
             old = res["TARGET"]
             request = {
@@ -151,17 +153,20 @@ def main():
                 "TTL_Sec": res["TTL_SEC"]
             }
             execute("domain.resource.update", request)
-            print("OK {0} -> {1}".format(old, public))
+            with open(expanduser('~/ddns.log'), 'a+') as w:
+                w.write("{} {} -> {}".format(time(), old, public))
             return 1
         else:
-            print("OK")
             return 0
     except Exception as excp:
         import traceback
         traceback.print_exc()
-        print("FAIL {0}: {1}".format(type(excp).__name__, excp))
+        with open(expanduser('~/ddns.log'), 'a+') as w:
+            w.write("{} FAIL {}: {}".format(time(), type(excp).__name__, excp))
         return 2
 
 
 if __name__ == "__main__":
-    exit(main())
+    while True:
+        main()
+        sleep(30)

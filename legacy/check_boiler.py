@@ -11,7 +11,7 @@ boiler.auth()
 
 state = boiler.check_power()
 
-with open(expanduser('~/fused_home/legacy/boiler.log'), 'a+') as w:
+with open(expanduser('~/boiler.log'), 'a+') as w:
     w.write("{} {}\n".format(time.time(), int(state)))
 
 exit(200 if state else 204)
