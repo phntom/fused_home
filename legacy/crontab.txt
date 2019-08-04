@@ -1,1 +1,2 @@
 @reboot nohup /home/pi/fused_home/legacy/boiler.sh &
+@reboot nohup /home/pi/fused_home/fused_home/ddns.py &
