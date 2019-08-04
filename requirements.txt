@@ -1,2 +1,5 @@
 yeelight<0.5.0
 requests<2.21.0
+apistar<0.6.0
+click<7.0.0
+linode-cli<2.1.0
