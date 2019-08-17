@@ -1,2 +1,3 @@
 @reboot nohup /home/pi/fused_home/fused_home/boiler_watchdog.py &
 @reboot nohup /home/pi/fused_home/fused_home/ddns.py &
+* * * * * curl --silent https://my.kix.co.il/rpi_ping.php?last=`tail -n1 /home/pi/boiler.log | cut -f1 -d' '`

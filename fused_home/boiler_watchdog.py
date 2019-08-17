@@ -5,6 +5,9 @@ from time import sleep, time
 import broadlink
 from os.path import expanduser
 
+import requests
+from requests import HTTPError
+
 logger = logging.getLogger(__name__)
 
 BOILER_TARGET = (('192.168.86.78', 80), bytearray(b'@\xb3\xbd4\xea4'), bytearray(b'V.\x17\x99m\t=(\xdd\xb3\xbaiZ.oX'))
@@ -57,7 +60,11 @@ if __name__ == "__main__":
         try:
             while True:
                 wd.main()
+                requests.get('https://my.kix.co.il/rpi_ping.php', params=[('last', str(time()))],).raise_for_status()
                 sleep(15)
+        except HTTPError:
+            logger.warning("internet is down, cannot reach my.kix.co.il")
+            sleep(30)
         except KeyboardInterrupt:
             logger.info("bye bye")
             exit(0)
