@@ -42,6 +42,10 @@ class Watchdog(object):
             self.prev_state = on
 
 
+def rsi_ping():
+    requests.get('https://my.kix.co.il/rpi_ping.php', params=[('last', str(time()))], ).raise_for_status()
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -60,7 +64,7 @@ if __name__ == "__main__":
         try:
             while True:
                 wd.main()
-                requests.get('https://my.kix.co.il/rpi_ping.php', params=[('last', str(time()))],).raise_for_status()
+                rsi_ping()
                 sleep(15)
         except HTTPError:
             logger.warning("internet is down, cannot reach my.kix.co.il")
