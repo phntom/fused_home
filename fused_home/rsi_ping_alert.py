@@ -1,7 +1,7 @@
 from os.path import expanduser
 from time import time, sleep
 
-from .irssinotifier import IrssiNotifier
+from irssinotifier import IrssiNotifier
 
 DELAY = 60*10
 
