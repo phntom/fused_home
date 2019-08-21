@@ -55,13 +55,14 @@ if __name__ == "__main__":
     logger.info("started, monitoring boiler {}, {}, {}".format(*BOILER_TARGET))
 
     while True:
-        wd = Watchdog()
-        while not wd.boiler.auth():
-            logger.error("failed to authenticate to boiler")
-            sleep(10)
-        logger.info("authenticated to boiler")
-
         try:
+            wd = Watchdog()
+
+            while not wd.boiler.auth():
+                logger.error("failed to authenticate to boiler")
+                sleep(10)
+            logger.info("authenticated to boiler")
+
             while True:
                 wd.main()
                 rsi_ping()
