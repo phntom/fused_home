@@ -1,0 +1,2 @@
+docker build . -t nas.home.kix.co.il:5000/fused_home
+docker push nas.home.kix.co.il:5000/fused_home
