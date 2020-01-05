@@ -5,3 +5,4 @@ click
 linode-cli
 broadlink
 pycrypto
+tldextract
