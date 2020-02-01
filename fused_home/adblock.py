@@ -18,6 +18,10 @@ WHITE_LIST_TOP_LEVEL = {
     'youtube-nocookie.com',
     'edgesuite.net',
     'skype.com',
+    'apis.google.com',
+    'amazonaws.com',
+    'assoc-amazon.com',
+    'i1.ytimg.com',
 }
 
 
