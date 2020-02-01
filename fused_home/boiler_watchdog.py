@@ -11,6 +11,7 @@ from requests import HTTPError
 logger = logging.getLogger(__name__)
 
 BOILER_TARGET = (('192.168.86.78', 80), bytearray(b'@\xb3\xbd4\xea4'), bytearray(b'V.\x17\x99m\t=(\xdd\xb3\xbaiZ.oX'))
+BOILER_TIMEOUT_MINUTES = 18
 
 
 class Watchdog(object):
@@ -33,7 +34,7 @@ class Watchdog(object):
                 w.write("{} {}\n".format(time(), int(on)))
 
         duration = datetime.now() - self.prev_time
-        if on and duration > timedelta(minutes=14):
+        if on and duration > timedelta(minutes=BOILER_TIMEOUT_MINUTES):
             logger.warning("boiler is on for {} - turning it off".format(duration))
             while self.boiler.check_power():
                 self.boiler.set_power(False)
