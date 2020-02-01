@@ -30,7 +30,7 @@ class Watchdog(object):
             logger.info("boiler is now {}".format("on" if on else "off"))
             self.prev_time = datetime.now()
             self.prev_state = on
-            with open(expanduser('~/boiler.log'), 'a+') as w:
+            with open(expanduser('~/logs/boiler.log'), 'a+') as w:
                 w.write("{} {}\n".format(time(), int(on)))
 
         duration = datetime.now() - self.prev_time
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S',
-                        filename=expanduser('~/boiler_watchdog.log'),
+                        filename=expanduser('~/logs/boiler_watchdog.log'),
                         filemode='a+')
     logger.info("started, monitoring boiler {}, {}, {}".format(*BOILER_TARGET))
 

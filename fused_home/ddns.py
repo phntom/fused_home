@@ -153,7 +153,7 @@ def main():
                 "TTL_Sec": res["TTL_SEC"]
             }
             execute("domain.resource.update", request)
-            with open(expanduser('~/ddns.log'), 'a+') as w:
+            with open(expanduser('~/logs/ddns.log'), 'a+') as w:
                 w.write("{} {} -> {}".format(time(), old, public))
             return 1
         else:
@@ -161,7 +161,7 @@ def main():
     except Exception as excp:
         import traceback
         traceback.print_exc()
-        with open(expanduser('~/ddns.log'), 'a+') as w:
+        with open(expanduser('~/logs/ddns.log'), 'a+') as w:
             w.write("{} FAIL {}: {}".format(time(), type(excp).__name__, excp))
         return 2
 
