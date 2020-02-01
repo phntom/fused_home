@@ -5,11 +5,6 @@ services:
             - '/mnt/appdata/fused_home/linode.key:/root/.linode.key'
             - '/mnt/appdata/fused_home/logs/:/root/logs'
         restart: unless-stopped
-        deploy:
-            resources:
-                limits:
-                    cpu: '1.5'
-                    memory: 256M
         logging:
             options:
                 max-size: 1g

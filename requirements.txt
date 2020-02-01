@@ -6,3 +6,4 @@ linode-cli
 broadlink
 pycrypto
 tldextract
+pywin32;platform_system=="Windows"
