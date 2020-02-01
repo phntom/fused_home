@@ -1,0 +1,19 @@
+version: '3.7'
+services:
+    fused_home:
+        volumes:
+            - '/mnt/appdata/fused_home/linode.key:/root/.linode.key'
+            - '/mnt/appdata/fused_home/logs/:/root/logs'
+        restart: unless-stopped
+        deploy:
+            resources:
+                limits:
+                    cpu: '1.5'
+                    memory: 256M
+        logging:
+            options:
+                max-size: 1g
+        image: nas.home.kix.co.il:5000/fused_home
+        build:
+          context: .
+          dockerfile: Dockerfile

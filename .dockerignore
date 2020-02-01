@@ -4,6 +4,7 @@
 /tests
 /docs
 /linode.key
+/legacy/
 
 ### Python template
 # Byte-compiled / optimized / DLL files
