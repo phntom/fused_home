@@ -1,3 +1,3 @@
 docker rm -f fused_home || true
 docker pull localhost:5000/fused_home
-docker run -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/logs/:/root/logs --name fused_home --memory=256m --restart unless-stopped localhost:5000/fused_home
+docker run --name fused_home --net=host -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m --restart unless-stopped localhost:5000/fused_home
