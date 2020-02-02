@@ -1,3 +1,8 @@
 docker rm -f fused_home || true
 docker pull localhost:5000/fused_home
-docker run --name fused_home --net=host -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m --restart unless-stopped localhost:5000/fused_home
+docker run --name fused_home --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m --restart unless-stopped localhost:5000/fused_home
+
+
+docker run -d --name fused_home_lights --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m --restart unless-stopped localhost:5000/fused_home python3 fused_home/lights.py
+docker run -d --name fused_home_ddns --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m --restart unless-stopped localhost:5000/fused_home python3 fused_home/ddns.py
+docker run -d --name fused_home_boiler --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m --restart unless-stopped localhost:5000/fused_home python3 fused_home/boiler_watchdog.py

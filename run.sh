@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 mkdir -p ~/logs
 touch ~/logs/boiler_watchdog.log
+export EXTERNAL_INTERFACE=eth1
 python3 fused_home/boiler_watchdog.py &
 python3 fused_home/ddns.py &
 python3 fused_home/lights.py &
