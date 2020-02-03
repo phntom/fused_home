@@ -16,14 +16,15 @@ CAP_COLUMNS = ['id', 'model', 'fw_ver', 'support', 'power', 'bright', 'color_mod
 TABLE_COLUMNS = ['date', 'time', 'timestamp', 'ip', 'port'] + CAP_COLUMNS
 
 
-def main(c):
+def main(conn):
     global TABLE_COLUMNS, CAP_COLUMNS, INTERFACE
     while True:
         for bulb in yeelight.discover_bulbs(timeout=5, interface=INTERFACE):
+            cursor = conn.cursor()
             ip, port, caps = bulb['ip'], bulb['port'], bulb['capabilities']
             cols = ', '.join(CAP_COLUMNS)
-            c.execute(f'SELECT {cols} FROM lights WHERE ip = ? AND port = ? ORDER BY rowid DESC LIMIT 1', (ip, port))
-            last_entry = c.fetchone()
+            cursor.execute(f'SELECT {cols} FROM lights WHERE ip = ? AND port = ? ORDER BY rowid DESC LIMIT 1', (ip, port))
+            last_entry = cursor.fetchone()
             if last_entry is not None:
                 last_entry = dict(zip(TABLE_COLUMNS, last_entry))
                 if last_entry == caps:
@@ -37,8 +38,8 @@ def main(c):
             })
             keys = ','.join(caps.keys())
             questions = ','.join(['?'] * len(caps))
-            c.execute(f'INSERT INTO lights({keys}) VALUES ({questions})', tuple(caps.values()))
-        c.commit()
+            cursor.execute(f'INSERT INTO lights({keys}) VALUES ({questions})', tuple(caps.values()))
+        conn.commit()
 
 
 if __name__ == "__main__":
@@ -49,7 +50,8 @@ if __name__ == "__main__":
                         filemode='a+',
                         )
     logger.info(f"started lights monitor, using interface {INTERFACE}")
-    c = sqlite3.connect(expanduser('~/logs/lights.db')).cursor()
+    conn = sqlite3.connect(expanduser('~/logs/lights.db'))
     columns = ",".join(TABLE_COLUMNS)
-    c.execute(f"""CREATE TABLE IF NOT EXISTS lights ({columns})""")
-    main(c)
+    conn.cursor().execute(f"""CREATE TABLE IF NOT EXISTS lights ({columns})""")
+    conn.cursor().execute(f"""CREATE INDEX IF NOT EXISTS ip_port ON lights(ip, port)""")
+    main(conn)
