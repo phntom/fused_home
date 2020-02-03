@@ -38,6 +38,7 @@ def main(c):
             keys = ','.join(caps.keys())
             questions = ','.join(['?'] * len(caps))
             c.execute(f'INSERT INTO lights({keys}) VALUES ({questions})', tuple(caps.values()))
+        c.commit()
 
 
 if __name__ == "__main__":
