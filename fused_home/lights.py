@@ -40,7 +40,7 @@ def main(conn):
                 last_entry = dict(zip(TABLE_COLUMNS, last_entry))
                 if last_entry == caps:
                     continue
-            CACHE[(ip, port)] = caps
+            CACHE[(ip, port)] = caps.copy()
             caps.update({
                 'ip': ip,
                 'port': port,
