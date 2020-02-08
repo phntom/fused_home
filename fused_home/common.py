@@ -80,7 +80,12 @@ def main(get_devices_fn, get_host_data_fn, logger, tag_name, device_columns, dis
     while True:
         try:
             for device in get_devices_fn():
-                host, caps = get_host_data_fn(device)
+                try:
+                    host_data = get_host_data_fn(device)
+                except Exception:
+                    logger.exception('failed to get host data on device {}', device)
+                    continue
+                host, caps = host_data
                 if host is None:
                     continue
                 try:
