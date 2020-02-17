@@ -5,6 +5,7 @@ from tldextract import tldextract
 
 URLS = (
     'https://raw.githubusercontent.com/tarampampam/static/master/hosts/block_shit.txt',
+    'https://block.energized.pro/spark/formats/hosts.txt',
     'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts;showintro=0',
     'https://adaway.org/hosts.txt',
 )
@@ -21,7 +22,22 @@ WHITE_LIST_TOP_LEVEL = {
     'apis.google.com',
     'amazonaws.com',
     'assoc-amazon.com',
-    'i1.ytimg.com',
+    'ytimg.com',
+    'amazon.com',
+    'instagram.com',
+    'ynet.co.il',
+    'spotify.com',
+    'netflix.com',
+    'github.com',
+    'gmail.com',
+    'energized.pro',
+    'githubusercontent.com',
+    'microsoft.com',
+    'cloudfront.com',
+    'facebook.com',
+    'googleapis.com',
+    'twitter.com',
+    'linkedin.com',
 }
 
 
@@ -37,9 +53,12 @@ def get_hosts_set():
     for num in range(len(URLS)):
         with open(f'ads_{num}.txt') as f:
             for line in f:
-                if '127.0.0.1' not in line:
+                if line.startswith('#') or ('0.0.0.0' not in line and '127.0.0.1' not in line):
                     continue
-                yield tldextract.extract(line.strip().split(' ')[1])
+                domain = line.strip().split(' ')[1]
+                extracted = tldextract.extract(domain)
+                if extracted.suffix:
+                    yield extracted
 
 
 def aggregate_domains():
@@ -53,7 +72,7 @@ def aggregate_domains():
         if top_level in yielded:
             continue
         if host.subdomain:
-            if counter[top_level] <= 5 or top_level in WHITE_LIST_TOP_LEVEL:
+            if top_level in WHITE_LIST_TOP_LEVEL: # counter[top_level] <= 5 or
                 yield f'{host.subdomain}.{host.domain}.{host.suffix}'
             else:
                 yielded.add(top_level)
@@ -66,35 +85,29 @@ def aggregate_domains():
 
 
 if __name__ == '__main__':
+
+    with open('remove-adblock.txt', 'w+') as fp:
+        fp.write("/ip firewall mangle\n")
+        fp.write("print value-list\n")
+        for x in range(6, 10000):
+            fp.write(f"remove {x}\n")
     download_all()
-    for x in range(6, 999):
-        print(f"remove {x}")
-    for x in aggregate_domains():
-        print(f'add chain=prerouting protocol=tcp dst-port=443 in-interface=bridge connection-mark=no-mark '
-              f'tls-host="{x}" action=jump jump-target=ads-list comment="tls-host={x}"')
-
+    fps = list(open(f'adblock{n}.txt', 'w+') for n in range(1))
+    for n in range(len(fps)):
+        fps[n].write("/ip firewall mangle\n")
+    for n, x in enumerate(aggregate_domains()):
+        fp = fps[n % len(fps)]
+        fp.write(f'add chain=prerouting protocol=tcp dst-port=443 in-interface=bridge connection-mark=no-mark '
+                 f'tls-host="{x}" action=jump jump-target=ads-list comment="tls-host={x}"\n')
+    print("sftp admin@192.168.88.1")
+    print("cd /disk1")
+    print("put *adblock*txt")
+    print("/execute /import disk1/remove-adblock.txt")
+    print("/execute /import disk1/adblock0.txt")
 """
- 0  D ;;; special dummy rule to show fasttrack counters
-      chain=prerouting action=passthrough
-
- 1  D ;;; special dummy rule to show fasttrack counters
-      chain=forward action=passthrough
-
- 2  D ;;; special dummy rule to show fasttrack counters
-      chain=postrouting action=passthrough
-
- 3    chain=ads-list action=add-dst-to-address-list address-list=list-ads
-      address-list-timeout=12h log=no log-prefix=""
-
- 4    chain=ads-list action=mark-connection new-connection-mark=mark-ads
-      passthrough=yes dst-address-list=list-ads connection-mark=no-mark
-      in-interface-list=LAN log=no log-prefix=""
-
- 5    chain=ads-list action=mark-routing new-routing-mark=route-ads
-      passthrough=no connection-mark=mark-ads log=no log-prefix=""
-
- 6    ;;; tls-host=*doubleclick.net
-      chain=prerouting action=jump jump-target=ads-list protocol=tcp
-      connection-mark=no-mark in-interface=bridge dst-port=443
-
+/ip firewall mangle
+add action=add-dst-to-address-list address-list=list-ads address-list-timeout=12h chain=ads-list
+add action=mark-connection chain=ads-list connection-mark=no-mark dst-address-list=list-ads in-interface-list=LAN \
+    new-connection-mark=mark-ads passthrough=yes
+add action=mark-routing chain=ads-list connection-mark=mark-ads new-routing-mark=route-ads passthrough=no
 """
