@@ -41,7 +41,8 @@ from json import load
 from urllib.parse import urlencode
 from urllib.request import urlretrieve
 
-RESOURCE = "6363291"
+RESOURCE4 = "6363291"
+RESOURCE6 = "6363291"
 #
 #
 # Find this domain by going to the DNS Manager in Linode and then clicking
@@ -66,6 +67,7 @@ with open(expanduser("~/.linode.key")) as f:
 #     printf("%s", $_SERVER["REMOTE_ADDR"]);
 #
 GETIP = "https://a248.e.akamai.net/whatismyip.akamai.com/"
+GETIP6 = "http://ip6only.me/api/"
 #
 # If for some reason the API URI changes, or you wish to send requests to a
 # different URI for debugging reasons, edit this.  {0} will be replaced with the
@@ -133,28 +135,43 @@ def ip():
     return open(file).read().strip()
 
 
+def ip6():
+    if DEBUG:
+        print("-->", GETIP6)
+    file, headers = urlretrieve(GETIP6)
+    if DEBUG:
+        print("<--", file)
+        print(headers, end="")
+        print(open(file).read())
+        print()
+    return open(file).read().split(',')[1]
+
+
 def main():
     try:
-        res = execute("domain.resource.list", {"DomainID": DOMAIN, "ResourceID": RESOURCE})["DATA"]
-        res = res[0]  # Turn res from a list to a dict
-        if (len(res)) == 0:
-            raise Exception("No such resource?".format(RESOURCE))
-        public = ip()
-        with open(expanduser('~/ddns.last'), 'w') as w:
-            w.write(str(time()))
-        if res["TARGET"] != public:
-            old = res["TARGET"]
-            request = {
-                "ResourceID": res["RESOURCEID"],
-                "DomainID": res["DOMAINID"],
-                "Name": res["NAME"],
-                "Type": res["TYPE"],
-                "Target": public,
-                "TTL_Sec": res["TTL_SEC"]
-            }
-            execute("domain.resource.update", request)
-            with open(expanduser('~/logs/ddns.log'), 'a+') as w:
-                w.write("{} {} -> {}".format(time(), old, public))
+        public4 = ip()
+        public6 = ip6()
+        for public, RESOURCE in ((public4, RESOURCE4), (public6, RESOURCE6)):
+            res = execute("domain.resource.list", {"DomainID": DOMAIN, "ResourceID": RESOURCE})["DATA"]
+            res = res[0]  # Turn res from a list to a dict
+            if (len(res)) == 0:
+                raise Exception("No such resource?".format(RESOURCE))
+
+            with open(expanduser('~/ddns.last'), 'w') as w:
+                w.write(str(time()))
+            if res["TARGET"] != public:
+                old = res["TARGET"]
+                request = {
+                    "ResourceID": res["RESOURCEID"],
+                    "DomainID": res["DOMAINID"],
+                    "Name": res["NAME"],
+                    "Type": res["TYPE"],
+                    "Target": public,
+                    "TTL_Sec": res["TTL_SEC"]
+                }
+                execute("domain.resource.update", request)
+                with open(expanduser('~/logs/ddns.log'), 'a+') as w:
+                    w.write("{} {} -> {}".format(time(), old, public))
             return 1
         else:
             return 0
