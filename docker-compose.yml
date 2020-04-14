@@ -3,6 +3,7 @@ services:
     fused_home:
         volumes:
             - '/mnt/appdata/fused_home/linode.key:/root/.linode.key'
+            - '/mnt/appdata/fused_home/router.key:/root/.router.key'
             - '/mnt/appdata/fused_home/logs/:/root/logs'
         restart: unless-stopped
         logging:
