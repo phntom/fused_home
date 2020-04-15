@@ -11,13 +11,13 @@ from routeros_api import RouterOsApiPool
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
-                    # filename=expanduser(f'~/logs/router.log'),
-                    # filemode='a+',
+                    filename=expanduser(f'~/logs/router.log'),
+                    filemode='a+',
                     )
 
 HEARTBEAT_SECONDS = 60*60*3
 MODEM_USER = 'admin'
-LOG_FILE = '../router.key'
+LOG_FILE = '~/.router.key'
 
 session_key_matcher = re.compile(r'.*var sessionkey =[^\d]+(\d+).*', re.DOTALL)
 error_counters_matcher = re.compile(r".*<tr align='left'>\n[ \t]*<td height='20'>(\d+)</td>\n[ \t]*<td height='20'>(\d+)</td>.*", re.DOTALL)
