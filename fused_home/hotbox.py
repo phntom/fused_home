@@ -11,13 +11,13 @@ from routeros_api import RouterOsApiPool
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
-                    filename=expanduser(f'~/logs/router.log'),
-                    filemode='a+',
+                    # filename=expanduser(f'~/logs/router.log'),
+                    # filemode='a+',
                     )
 
 HEARTBEAT_SECONDS = 60*60*3
 MODEM_USER = 'admin'
-LOG_FILE = '~/.router.key'
+LOG_FILE = '../router.key'
 
 session_key_matcher = re.compile(r'.*var sessionkey =[^\d]+(\d+).*', re.DOTALL)
 error_counters_matcher = re.compile(r".*<tr align='left'>\n[ \t]*<td height='20'>(\d+)</td>\n[ \t]*<td height='20'>(\d+)</td>.*", re.DOTALL)
@@ -31,7 +31,9 @@ MODEM_PASSWORD = ROUTER_KEY.pop('MODEM_PASSWORD')
 
 session_key = None
 
-while True:
+def main_loop():
+    global last_heartbeat, session_key
+
     if (datetime.now() - last_heartbeat).total_seconds() > HEARTBEAT_SECONDS:
         last_heartbeat = datetime.now()
         logging.info("nothing to report")
@@ -42,7 +44,7 @@ while True:
     if 'document.write(AccessMemberLimit);' in res.text:
         logging.warning("Permission denied, another user is already logged; Sleeping 120 seconds")
         sleep(120)
-        continue
+        return
 
     if '>location.href="/login.html"<' in res.text:
         logging.info("logging in to session")
@@ -58,7 +60,7 @@ while True:
         })
         if 'var RefreshPage = ' not in res.text:
             raise ValueError('login failed')
-        continue
+        return
 
     new_session_key = session_key_matcher.match(res.text).group(1)
     if new_session_key and not session_key:
@@ -79,10 +81,8 @@ while True:
 
         logging.warning("restarting cable modem")
 
-        res = requests.post(f'http://192.168.100.1/reseau-pa3-frequencecable.cgi?sessionKey={session_key}', data={
-            'CmStartupDsFreq': '999999',
+        res = requests.post(f'http://192.168.100.1/rebootinfo.cgi?sessionKey={session_key}', data={
             'sessionKey': session_key,
-            'action': '1',
         })
         res.raise_for_status()
         logging.debug(res.text)
@@ -97,3 +97,12 @@ while True:
         sleep(100)
 
     sleep(5)
+
+
+if __name__ == '__main__':
+    while True:
+        try:
+            main_loop()
+        except Exception:
+            logging.exception('unhandled exception')
+            raise
