@@ -6,6 +6,7 @@ docker rm -f fused_home_lights || true
 docker rm -f fused_home_sensors || true
 docker rm -f fused_home_ddns || true
 docker rm -f fused_home_boiler || true
+docker rm -f fused_home_router || true
 
 docker pull localhost:5000/fused_home
 

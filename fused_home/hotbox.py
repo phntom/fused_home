@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from time import sleep
 
 import json
@@ -14,7 +15,17 @@ logging.basicConfig(level=logging.INFO,
                     filemode='a+',
                     )
 
-with open(expanduser("~/.router.key")) as f:
+HEARTBEAT_SECONDS = 60*60*3
+MODEM_USER = 'admin'
+LOG_FILE = '~/.router.key'
+
+session_key_matcher = re.compile(r'.*var sessionkey =[^\d]+(\d+).*', re.DOTALL)
+error_counters_matcher = re.compile(r".*<tr align='left'>\n[ \t]*<td height='20'>(\d+)</td>\n[ \t]*<td height='20'>(\d+)</td>.*", re.DOTALL)
+
+last_heartbeat = datetime.now()
+logging.info("starting monitoring router")
+
+with open(expanduser(LOG_FILE)) as f:
     ROUTER_KEY = json.load(f)
 MODEM_PASSWORD = ROUTER_KEY.pop('MODEM_PASSWORD')
 
@@ -26,26 +37,34 @@ if '>location.href="/login.html"<' in res.text:
     # login
     res = requests.get('http://192.168.100.1/login.html')
     res.raise_for_status()
-    session_key = re.compile(r'.*var sessionkey = ..(\d+).*', re.DOTALL).match(res.text).group(1)
+    session_key = session_key_matcher.match(res.text).group(1)
     logging.info("session key is {}".format(session_key))
     res = requests.post(f'http://192.168.100.1/postlogin.cgi?sessionKey={session_key}', data={
         'sessionKey': session_key,
-        'loginUsername': 'admin',
+        'loginUsername': MODEM_USER,
         'loginPassword': MODEM_PASSWORD,
     })
     if 'var RefreshPage = ' not in res.text:
         raise ValueError('login failed')
 
 while True:
+    if (datetime.now() - last_heartbeat).total_seconds() > HEARTBEAT_SECONDS:
+        last_heartbeat = datetime.now()
+        logging.info("nothing to report")
+
     res = requests.get('http://192.168.100.1/reseau-pa3-frequencecable.html')
     res.raise_for_status()
-    error_counters_matcher = re.compile(r".*<tr align='left'>\n[ \t]*<td height='20'>(\d+)</td>\n[ \t]*<td height='20'>(\d+)</td>.*", re.DOTALL)
+    new_session_key = session_key_matcher.match(res.text).group(1)
+    if not session_key:
+        session_key = new_session_key
+        logging.info("session key is {}".format(session_key))
+
     m = error_counters_matcher.match(res.text)
     correctable = int(m.group(1))
     uncorrectable = int(m.group(2))
-    logging.warning("found {} correctable and {} uncorrectable errors".format(correctable, uncorrectable))
 
     if uncorrectable > 1:
+        logging.warning("found {} correctable and {} uncorrectable errors".format(correctable, uncorrectable))
         logging.warning("disabling cable modem route")
         router_api = RouterOsApiPool(**ROUTER_KEY).get_api()
         route = router_api.get_resource('/ip/route')
