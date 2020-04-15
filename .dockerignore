@@ -4,6 +4,7 @@
 /tests
 /docs
 /linode.key
+/router.key
 /legacy/
 
 ### Python template
