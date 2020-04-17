@@ -15,21 +15,23 @@ logging.basicConfig(level=logging.INFO,
                     filemode='a+',
                     )
 
-HEARTBEAT_SECONDS = 60*60*3
+HEARTBEAT_SECONDS = 60 * 60 * 3
 MODEM_USER = 'admin'
-LOG_FILE = '~/.router.key'
+ROUTER_KEY_FILE = '~/.router.key'
 
 session_key_matcher = re.compile(r'.*var sessionkey =[^\d]+(\d+).*', re.DOTALL)
-error_counters_matcher = re.compile(r".*<tr align='left'>\n[ \t]*<td height='20'>(\d+)</td>\n[ \t]*<td height='20'>(\d+)</td>.*", re.DOTALL)
+error_counters_matcher = re.compile(
+    r".*<tr align='left'>\n[ \t]*<td height='20'>(\d+)</td>\n[ \t]*<td height='20'>(\d+)</td>.*", re.DOTALL)
 
 last_heartbeat = datetime.now()
 logging.info("starting monitoring router")
 
-with open(expanduser(LOG_FILE)) as f:
+with open(expanduser(ROUTER_KEY_FILE)) as f:
     ROUTER_KEY = json.load(f)
 MODEM_PASSWORD = ROUTER_KEY.pop('MODEM_PASSWORD')
 
 session_key = None
+
 
 def main_loop():
     global last_heartbeat, session_key
@@ -38,7 +40,8 @@ def main_loop():
         last_heartbeat = datetime.now()
         logging.info("nothing to report")
 
-    res = requests.get('http://192.168.100.1/reseau-pa3-frequencecable.html')
+    session = requests.Session()
+    res = session.get('http://192.168.100.1/reseau-pa3-frequencecable.html')
     res.raise_for_status()
 
     if 'document.write(AccessMemberLimit);' in res.text:
@@ -49,11 +52,11 @@ def main_loop():
     if '>location.href="/login.html"<' in res.text:
         logging.info("logging in to session")
         # login
-        res = requests.get('http://192.168.100.1/login.html')
+        res = session.get('http://192.168.100.1/login.html')
         res.raise_for_status()
         session_key = session_key_matcher.match(res.text).group(1)
         logging.info("session key is {}".format(session_key))
-        res = requests.post(f'http://192.168.100.1/postlogin.cgi?sessionKey={session_key}', data={
+        res = session.post(f'http://192.168.100.1/postlogin.cgi?sessionKey={session_key}', data={
             'sessionKey': session_key,
             'loginUsername': MODEM_USER,
             'loginPassword': MODEM_PASSWORD,
@@ -81,11 +84,10 @@ def main_loop():
 
         logging.warning("restarting cable modem")
 
-        res = requests.post(f'http://192.168.100.1/rebootinfo.cgi?sessionKey={session_key}', data={
+        res = session.post(f'http://192.168.100.1/rebootinfo.cgi?sessionKey={session_key}', data={
             'sessionKey': session_key,
         })
         res.raise_for_status()
-        logging.debug(res.text)
 
         logging.warning("waiting 15 seconds")
         sleep(15)

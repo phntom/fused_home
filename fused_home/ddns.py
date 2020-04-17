@@ -35,11 +35,22 @@
 # https://manager.linode.com/dns/resource/domain.com?id=000000
 #                                          Resource ID  ^
 #
+import json
+import logging
 from os.path import expanduser
 from time import sleep, time
 from json import load
 from urllib.parse import urlencode
 from urllib.request import urlretrieve
+
+from routeros_api import RouterOsApiPool
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    filename=expanduser(f'~/logs/ddns2.log'),
+                    filemode='a+',
+                    )
 
 RESOURCE4 = "6363291"
 RESOURCE6 = "6363291"
@@ -66,6 +77,13 @@ with open(expanduser("~/.linode.key")) as f:
 #     header("Content-type: text/plain");
 #     printf("%s", $_SERVER["REMOTE_ADDR"]);
 #
+with open(expanduser('~/.router.key')) as f:
+    ROUTER_KEY = json.load(f)
+    ROUTER_KEY.pop('MODEM_PASSWORD')
+router_api = RouterOsApiPool(**ROUTER_KEY).get_api()
+results = router_api.get_resource('/ip/address').get(interface='pppoe-out1')
+address_v4 = results[0]['address'].split('/')[0] if results else None
+
 GETIP = "https://a248.e.akamai.net/whatismyip.akamai.com/"
 GETIP6 = "http://ip6only.me/api/"
 #
@@ -124,26 +142,14 @@ def execute(action, parameters):
 
 
 def ip():
-    if DEBUG:
-        print("-->", GETIP)
+    if address_v4:
+        return address_v4
     file, headers = urlretrieve(GETIP)
-    if DEBUG:
-        print("<--", file)
-        print(headers, end="")
-        print(open(file).read())
-        print()
     return open(file).read().strip()
 
 
 def ip6():
-    if DEBUG:
-        print("-->", GETIP6)
     file, headers = urlretrieve(GETIP6)
-    if DEBUG:
-        print("<--", file)
-        print(headers, end="")
-        print(open(file).read())
-        print()
     return open(file).read().split(',')[1]
 
 
@@ -170,16 +176,12 @@ def main():
                     "TTL_Sec": res["TTL_SEC"]
                 }
                 execute("domain.resource.update", request)
-                with open(expanduser('~/logs/ddns.log'), 'a+') as w:
-                    w.write("{} {} -> {}".format(time(), old, public))
+                logging.info(f"updated {RESOURCE} ip address from {old} to {public}")
             return 1
         else:
             return 0
-    except Exception as excp:
-        import traceback
-        traceback.print_exc()
-        with open(expanduser('~/logs/ddns.log'), 'a+') as w:
-            w.write("{} FAIL {}: {}".format(time(), type(excp).__name__, excp))
+    except Exception:
+        logging.exception("failed to update")
         return 2
 
 
