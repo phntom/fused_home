@@ -57,7 +57,6 @@ def main_loop(session_key, session):
     new_session_key = session_key_matcher.match(res.text).group(1)
     if new_session_key and new_session_key != session_key:
         session_key = new_session_key
-        logging.info("session key is {}".format(session_key))
 
     m = error_counters_matcher.match(res.text)
     correctable = int(m.group(1))
@@ -71,7 +70,7 @@ def main_loop(session_key, session):
         route_id = route.get(distance='15')[0]['id']
         route.set(id=route_id, disabled='no')
 
-        logging.warning("restarting cable modem")
+        logging.warning("restarting cable modem; session key is {}, cookies {}".format(session_key, session.cookies))
 
         res = session.post(f'http://192.168.100.1/reseau-pa3-frequencecable.cgi?sessionKey={session_key}', data={
             'sessionKey': session_key,
