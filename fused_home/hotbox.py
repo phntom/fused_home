@@ -46,10 +46,16 @@ def main_loop(session_key, session):
         })
         if 'var RefreshPage = ' not in res.text:
             raise ValueError('login failed')
+        logging.info(f"cookie is {session.cookies}")
         return session_key
 
+    if not session.cookies:
+        logging.warning(f"need to force logout and log back in for reboot to work")
+        session.get('http://192.168.100.1/logout.html').raise_for_status()
+        return ''
+
     new_session_key = session_key_matcher.match(res.text).group(1)
-    if new_session_key and not session_key:
+    if new_session_key and new_session_key != session_key:
         session_key = new_session_key
         logging.info("session key is {}".format(session_key))
 
@@ -67,10 +73,16 @@ def main_loop(session_key, session):
 
         logging.warning("restarting cable modem")
 
-        res = session.post(f'http://192.168.100.1/rebootinfo.cgi?sessionKey={session_key}', data={
+        res = session.post(f'http://192.168.100.1/reseau-pa3-frequencecable.cgi?sessionKey={session_key}', data={
             'sessionKey': session_key,
+            'CmStartupDsFreq': '999999',
+            'action': '1',
         })
         res.raise_for_status()
+        if 'Invalid Session Key' in res.text:
+            logging.warning('Invalid Session Key error, logging out and retrying')
+            session.get('http://192.168.100.1/logout.html').raise_for_status()
+            return ''
 
         logging.warning("waiting 15 seconds")
         sleep(15)
@@ -78,8 +90,8 @@ def main_loop(session_key, session):
         logging.warning("reenabling cable modem route")
         route.set(id=route_id, disabled='no')
 
-        logging.warning("waiting 105 seconds")
-        sleep(100)
+        logging.warning("waiting 100 seconds")
+        sleep(95)
 
     return session_key
 
