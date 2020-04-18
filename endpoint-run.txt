@@ -10,7 +10,7 @@ docker rm -f fused_home_router || true
 
 docker pull localhost:5000/fused_home
 
-docker run -d --name fused_home_ddns --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m -c 10 --restart on-failure:10 localhost:5000/fused_home python3 fused_home/ddns.py
+docker run -d --name fused_home_ddns --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/linode.key:/root/.linode.key -v /mnt/appdata/fused_home/router.key:/root/.router.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m -c 10 --restart on-failure:10 localhost:5000/fused_home python3 fused_home/ddns.py
 docker run -d --name fused_home_boiler --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m -c 10 --restart on-failure:10 localhost:5000/fused_home python3 fused_home/boiler_watchdog.py
 docker run -d --name fused_home_lights --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m -c 10 --restart on-failure:10 localhost:5000/fused_home python3 fused_home/lights.py
 docker run -d --name fused_home_sensors --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m -c 10 --restart on-failure:10 localhost:5000/fused_home python3 fused_home/sensors.py

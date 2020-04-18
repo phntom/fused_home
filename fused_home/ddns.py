@@ -45,12 +45,9 @@ from urllib.request import urlretrieve
 
 from routeros_api import RouterOsApiPool
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    filename=expanduser(f'~/logs/ddns2.log'),
-                    filemode='a+',
-                    )
+from common import setup_logging, heartbeat
+
+setup_logging('ddns2.log')
 
 RESOURCE4 = "6363291"
 RESOURCE6 = "6363291"
@@ -175,8 +172,8 @@ def main():
                     "Target": public,
                     "TTL_Sec": res["TTL_SEC"]
                 }
-                execute("domain.resource.update", request)
-                logging.info(f"updated {RESOURCE} ip address from {old} to {public}")
+                res = execute("domain.resource.update", request)
+                logging.info(f"updated {RESOURCE} ip address from {old} to {public} {res}")
             return 1
         else:
             return 0
@@ -187,5 +184,6 @@ def main():
 
 if __name__ == "__main__":
     while True:
+        heartbeat()
         main()
         sleep(30)

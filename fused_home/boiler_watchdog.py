@@ -8,6 +8,8 @@ from os.path import expanduser
 import requests
 from requests import HTTPError
 
+from common import setup_logging, heartbeat
+
 logger = logging.getLogger(__name__)
 
 BOILER_TARGET = (('192.168.86.78', 80), bytearray(b'@\xb3\xbd4\xea4'), bytearray(b'V.\x17\x99m\t=(\xdd\xb3\xbaiZ.oX'))
@@ -48,15 +50,12 @@ def rsi_ping():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S',
-                        filename=expanduser('~/logs/boiler_watchdog.log'),
-                        filemode='a+')
+    setup_logging('boiler_watchdog.log')
     logger.info("started, monitoring boiler {}, {}, {}".format(*BOILER_TARGET))
 
     while True:
         try:
+            heartbeat()
             wd = Watchdog()
 
             while not wd.boiler.auth():

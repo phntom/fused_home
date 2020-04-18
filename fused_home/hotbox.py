@@ -8,14 +8,9 @@ import requests
 from os.path import expanduser
 from routeros_api import RouterOsApiPool
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    filename=expanduser(f'~/logs/router.log'),
-                    filemode='a+',
-                    )
+from common import setup_logging, heartbeat
 
-HEARTBEAT_SECONDS = 60 * 60 * 3
+HEARTBEAT_SECONDS = 60 * 60 * 1
 MODEM_USER = 'admin'
 ROUTER_KEY_FILE = '~/.router.key'
 
@@ -23,31 +18,19 @@ session_key_matcher = re.compile(r'.*var sessionkey =[^\d]+(\d+).*', re.DOTALL)
 error_counters_matcher = re.compile(
     r".*<tr align='left'>\n[ \t]*<td height='20'>(\d+)</td>\n[ \t]*<td height='20'>(\d+)</td>.*", re.DOTALL)
 
-last_heartbeat = datetime.now()
-logging.info("starting monitoring router")
-
 with open(expanduser(ROUTER_KEY_FILE)) as f:
     ROUTER_KEY = json.load(f)
 MODEM_PASSWORD = ROUTER_KEY.pop('MODEM_PASSWORD')
 
-session_key = None
 
-
-def main_loop():
-    global last_heartbeat, session_key
-
-    if (datetime.now() - last_heartbeat).total_seconds() > HEARTBEAT_SECONDS:
-        last_heartbeat = datetime.now()
-        logging.info("nothing to report")
-
-    session = requests.Session()
+def main_loop(session_key, session):
     res = session.get('http://192.168.100.1/reseau-pa3-frequencecable.html')
     res.raise_for_status()
 
     if 'document.write(AccessMemberLimit);' in res.text:
         logging.warning("Permission denied, another user is already logged; Sleeping 120 seconds")
         sleep(120)
-        return
+        return session_key
 
     if '>location.href="/login.html"<' in res.text:
         logging.info("logging in to session")
@@ -63,7 +46,7 @@ def main_loop():
         })
         if 'var RefreshPage = ' not in res.text:
             raise ValueError('login failed')
-        return
+        return session_key
 
     new_session_key = session_key_matcher.match(res.text).group(1)
     if new_session_key and not session_key:
@@ -98,13 +81,20 @@ def main_loop():
         logging.warning("waiting 105 seconds")
         sleep(100)
 
-    sleep(5)
+    return session_key
 
 
 if __name__ == '__main__':
+    setup_logging('router.log')
+    s_key = None
+    logging.info("starting monitoring router")
+    requests_session = requests.Session()
+
     while True:
         try:
-            main_loop()
+            heartbeat()
+            s_key = main_loop(s_key, requests_session)
+            sleep(5)
         except Exception:
             logging.exception('unhandled exception')
             raise

@@ -13,6 +13,27 @@ INTERFACE = environ.get('EXTERNAL_INTERFACE', False)
 META_COLUMNS = ['date', 'time', 'timestamp', 'ip', 'port']
 CACHE = {}
 
+HEARTBEAT_SECONDS = 60 * 60
+_LAST_HEARTBEAT = datetime.now()
+
+
+def setup_logging(log_filename):
+    formatting = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+    logging.basicConfig(
+        level=logging.INFO,
+        format=formatting,
+        datefmt='%Y-%m-%d %H:%M:%S',
+        filename=expanduser(f'~/logs/{log_filename}'),
+        filemode='a+',
+    )
+
+
+def heartbeat():
+    global _LAST_HEARTBEAT
+    if (datetime.now() - _LAST_HEARTBEAT).total_seconds() > HEARTBEAT_SECONDS:
+        _LAST_HEARTBEAT = datetime.now()
+        logging.info(".")
+
 
 def fetch_entry(host, cursor, tag_name, device_columns):
     entry = CACHE.get(host)
@@ -63,12 +84,7 @@ def process_unseen(cursor, seen, tag_name, disconnected_field):
 
 
 def main(get_devices_fn, get_host_data_fn, logger, tag_name, device_columns, disconnected_field):
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S',
-                        filename=expanduser(f'~/logs/{tag_name}.log'),
-                        filemode='a+',
-                        )
+    setup_logging(tag_name + '.log')
     logger.info(f"started {tag_name} monitor, using interface {INTERFACE}")
 
     conn = sqlite3.connect(expanduser(f'~/logs/{tag_name}.db'))
@@ -79,6 +95,7 @@ def main(get_devices_fn, get_host_data_fn, logger, tag_name, device_columns, dis
     cursor = conn.cursor()
     while True:
         try:
+            heartbeat()
             for device in get_devices_fn():
                 try:
                     host_data = get_host_data_fn(device)
