@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import json
 import logging
+import socket
 import linodecli
 from os.path import expanduser
 from time import sleep
@@ -33,11 +34,7 @@ def update_record_ip(domain, resource, new_ip):
     logging.info(res.text)
 
 
-def get_local_ipv4():
-    with open(expanduser('~/.router.key')) as f:
-        router_key = json.load(f)
-        router_key.pop('MODEM_PASSWORD')
-    router_api = RouterOsApiPool(**router_key).get_api()
+def get_local_ipv4(router_api):
     results = router_api.get_resource('/ip/address').get(interface='pppoe-out1')
     if results:
         return results[0]['address'].split('/')[0]
@@ -46,7 +43,18 @@ def get_local_ipv4():
     return res.text
 
 
-def get_local_ipv6():
+def get_local_ipv6(router_api):
+    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    s.connect(("2606:4700:4700::1111", 80))
+    if not s.getsockname():
+        return None
+    suffix = ':'.join(s.getsockname()[0].split(':')[-4:])
+
+    results = router_api.get_resource('/ipv6/pool').get(name='hotnet1')
+    if results:
+        prefix = results[0]['prefix'].split('::')[0]
+        return prefix + ':' + suffix
+
     res = requests.get("http://ip6only.me/api/")
     res.raise_for_status()
     return res.text.split(',')[1]
@@ -58,9 +66,16 @@ def main():
     resource6 = "15198378"
     domain = "114584"
     logging.info("starting ddns")
+    with open(expanduser('~/.router.key')) as f:
+        router_key = json.load(f)
+        router_key.pop('MODEM_PASSWORD')
+    router_api = RouterOsApiPool(**router_key).get_api()
     while True:
         try:
-            for local_ip, resource in ((get_local_ipv4(), resource4), (get_local_ipv6(), resource6)):
+            for local_ip, resource in (
+                (get_local_ipv4(router_api), resource4),
+                (get_local_ipv6(router_api), resource6)
+            ):
                 current_ip, record_name = get_current_record_ip(domain, resource)
                 if current_ip != local_ip:
                     logging.info(f"updating record {record_name} from {current_ip} to {local_ip}")
