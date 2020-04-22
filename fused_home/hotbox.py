@@ -87,7 +87,7 @@ def main_loop(session_key, session):
         sleep(45)
 
         logging.warning("reenabling cable modem route")
-        route.set(id=route_id, disabled='no')
+        route.set(id=route_id, disabled='yes')
 
         logging.warning("waiting 70 seconds")
         sleep(65)
