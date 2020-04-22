@@ -83,14 +83,14 @@ def main_loop(session_key, session):
             session.get('http://192.168.100.1/logout.html').raise_for_status()
             return ''
 
-        logging.warning("waiting 15 seconds")
-        sleep(15)
+        logging.warning("waiting 45 seconds")
+        sleep(45)
 
         logging.warning("reenabling cable modem route")
         route.set(id=route_id, disabled='no')
 
-        logging.warning("waiting 100 seconds")
-        sleep(95)
+        logging.warning("waiting 70 seconds")
+        sleep(65)
 
     return session_key
 

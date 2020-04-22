@@ -8,6 +8,7 @@ from time import sleep
 
 import requests
 from routeros_api import RouterOsApiPool
+from routeros_api.exceptions import RouterOsApiConnectionError
 
 from common import setup_logging, heartbeat
 
@@ -81,6 +82,9 @@ def main():
                     logging.info(f"updating record {record_name} from {current_ip} to {local_ip}")
                     update_record_ip(domain, resource, local_ip)
             heartbeat()
+        except RouterOsApiConnectionError:
+            router_api = RouterOsApiPool(**router_key).get_api()
+            logger.warning('resetting router api')
         except:
             logging.exception("error")
         finally:
