@@ -2,11 +2,14 @@
 import json
 import logging
 import socket
+from json.decoder import JSONDecodeError
+
 import linodecli
 from os.path import expanduser
 from time import sleep
 
 import requests
+import urllib3
 from routeros_api import RouterOsApiPool
 from routeros_api.exceptions import RouterOsApiConnectionError
 
@@ -84,7 +87,11 @@ def main():
             heartbeat()
         except RouterOsApiConnectionError:
             router_api = RouterOsApiPool(**router_key).get_api()
-            logger.warning('resetting router api')
+            logging.warning('resetting router api')
+        except JSONDecodeError:
+            logging.exception('linode JSONDecodeError')
+        except (requests.exceptions.ConnectionError, urllib3.exceptions.ProtocolError, urllib3.exceptions.MaxRetryError):
+            logging.exception('connection issues')
         except:
             logging.exception("error")
         finally:

@@ -7,6 +7,8 @@ import logging
 import requests
 from os.path import expanduser
 from routeros_api import RouterOsApiPool
+from urllib3 import HTTPConnectionPool
+from urllib3.exceptions import NewConnectionError
 
 from common import setup_logging, heartbeat
 
@@ -28,8 +30,8 @@ def main_loop(session_key, session):
     res.raise_for_status()
 
     if 'document.write(AccessMemberLimit);' in res.text:
-        logging.warning("Permission denied, another user is already logged; Sleeping 120 seconds")
-        sleep(120)
+        logging.warning("Permission denied, another user is already logged; sleeping 20 seconds")
+        sleep(20)
         return session_key
 
     if '>location.href="/login.html"<' in res.text:
@@ -83,14 +85,11 @@ def main_loop(session_key, session):
             session.get('http://192.168.100.1/logout.html').raise_for_status()
             return ''
 
-        logging.warning("waiting 45 seconds")
-        sleep(45)
+        logging.warning("waiting 125 seconds")
+        sleep(125)
 
         logging.warning("reenabling cable modem route")
         route.set(id=route_id, disabled='yes')
-
-        logging.warning("waiting 70 seconds")
-        sleep(65)
 
     return session_key
 
@@ -106,6 +105,9 @@ if __name__ == '__main__':
             heartbeat()
             s_key = main_loop(s_key, requests_session)
             sleep(5)
+        except (HTTPConnectionPool, NewConnectionError, OSError):
+            logging.exception('HTTP connection exception; sleeping 10 seconds')
+            sleep(10)
         except Exception:
             logging.exception('unhandled exception')
             raise
