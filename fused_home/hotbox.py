@@ -7,8 +7,7 @@ import logging
 import requests
 from os.path import expanduser
 from routeros_api import RouterOsApiPool
-from urllib3 import HTTPConnectionPool
-from urllib3.exceptions import NewConnectionError
+from routeros_api.exceptions import RouterOsApiConnectionError
 
 from common import setup_logging, heartbeat
 
@@ -105,7 +104,7 @@ if __name__ == '__main__':
             heartbeat()
             s_key = main_loop(s_key, requests_session)
             sleep(5)
-        except (HTTPConnectionPool, NewConnectionError, OSError):
+        except (OSError, requests.exceptions.ConnectionError, RouterOsApiConnectionError):
             logging.exception('HTTP connection exception; sleeping 10 seconds')
             sleep(10)
         except Exception:

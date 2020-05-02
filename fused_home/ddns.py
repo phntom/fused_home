@@ -90,10 +90,11 @@ def main():
             logging.warning('resetting router api')
         except JSONDecodeError:
             logging.exception('linode JSONDecodeError')
-        except (requests.exceptions.ConnectionError, urllib3.exceptions.ProtocolError, urllib3.exceptions.MaxRetryError):
-            logging.exception('connection issues')
+        except (requests.exceptions.RequestException, OSError):
+            logging.exception('RequestException issues')
         except:
             logging.exception("error")
+            raise
         finally:
             sleep(30)
 
