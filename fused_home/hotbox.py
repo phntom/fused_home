@@ -84,8 +84,17 @@ def main_loop(session_key, session):
             session.get('http://192.168.100.1/logout.html').raise_for_status()
             return ''
 
+        logging.warning("disabling eth interface on router")
+        eth = router_api.get_resource('/interface')
+        eth_id = route.get(name='wan-hot')[0]['id']
+        eth.set(id=eth_id, disabled='yes')
+
         logging.warning("waiting 125 seconds")
-        sleep(125)
+        sleep(120)
+
+        eth.set(id=eth_id, disabled='no')
+        logging.warning("reenabling cable modem interface")
+        sleep(5)
 
         logging.warning("reenabling cable modem route")
         route.set(id=route_id, disabled='yes')
