@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 from time import sleep
 
 import json
@@ -86,7 +85,7 @@ def main_loop(session_key, session):
 
         logging.warning("disabling eth interface on router")
         eth = router_api.get_resource('/interface')
-        eth_id = route.get(name='wan-hot')[0]['id']
+        eth_id = eth.get(name='wan-hot')[0]['id']
         eth.set(id=eth_id, disabled='yes')
 
         logging.warning("waiting 125 seconds")
