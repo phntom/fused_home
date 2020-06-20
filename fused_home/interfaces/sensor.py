@@ -49,6 +49,18 @@ class Lux(Sensor):
         NORMAL = "normal"
         BRIGHT = "bright"
 
+        @classmethod
+        def from_percentage(cls, percentage):
+            if percentage < 1500:
+                return cls.DARK
+            if percentage < 3500:
+                return cls.DIM
+            if percentage < 8000:
+                return cls.NORMAL
+            if percentage < 10000:
+                return cls.BRIGHT
+            return None
+
     level: Optional[LuxLevel] = field(default=None)
 
 

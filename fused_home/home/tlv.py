@@ -8,7 +8,7 @@ from interfaces.connection import HostPort
 from interfaces.home import Home
 
 TLV_HOME_ID = 'TLV'
-TLV_REMOTE_HOST = 'tlv.home.kix.co.il'
+TLV_REMOTE_HOST = secure("ZD8nBBZR")
 
 
 @dataclass
@@ -148,7 +148,6 @@ class TLV(Home):
         ),
         Gateway(
             friendly_name="Gateway",
-            internal_id="gateway",
             home=TLV_HOME_ID,
             room=Room.BEDROOM,
             host_port=HostPort(
@@ -157,7 +156,7 @@ class TLV(Home):
                 local_host=secure("wWW5NNZv"),
                 local_port=9898,
             ),
-            sid=secure("9v2wrqcA"),
+            internal_id=secure("9v2wrqcA"),
             key=secure("jqXSLd39")
         ),
     )
