@@ -42,7 +42,8 @@ def main_loop(session_key, session):
             'loginPassword': MODEM_PASSWORD,
         })
         if 'var RefreshPage = ' not in res.text:
-            raise ValueError('login failed')
+            logging.warning("failed to login")
+            return session_key
         logging.info(f"cookie is {session.cookies}")
         return session_key
 

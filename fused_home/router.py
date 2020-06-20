@@ -2,8 +2,9 @@ import netaddr as netaddr
 from netaddr import IPNetwork
 from routeros_api import RouterOsApiPool
 
-from common import get_config
+from common import get_config, setup_logging
 
+setup_logging('routes.log')
 CONFIG = get_config('router', 'modem')
 ROUTER_KEY = CONFIG['ROUTER_CONFIG']
 MODEM_PASSWORD = CONFIG['MODEM_PASSWORD']
