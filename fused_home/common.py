@@ -12,6 +12,7 @@ from time import time
 INTERFACE = environ.get('EXTERNAL_INTERFACE', False)
 META_COLUMNS = ['date', 'time', 'timestamp', 'ip', 'port', 'friendly_name']
 CACHE = {}
+_CACHE_CONFIG = None
 
 HEARTBEAT_SECONDS = 60 * 60
 _LAST_HEARTBEAT = datetime.now()
@@ -40,6 +41,13 @@ def get_config(*args):
     except Exception:
         logging.exception('failed to load config for {}'.format(args))
         raise
+
+
+def secure(key):
+    global _CACHE_CONFIG
+    if _CACHE_CONFIG is None:
+        _CACHE_CONFIG = get_config('secure')
+    return _CACHE_CONFIG['SECURE_KEYS'][key]
 
 
 def setup_logging(log_filename):
