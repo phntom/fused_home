@@ -8,3 +8,4 @@ broadlink==0.12.0
 pycrypto
 tldextract
 pywin32;platform_system=="Windows"
+PyXiaomiGateway

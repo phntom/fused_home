@@ -1,5 +1,6 @@
 /linode.key
 /router.key
+/common-settings.json
 
 ### Python template
 # Byte-compiled / optimized / DLL files

@@ -1,20 +1,45 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import json
 import logging
 import sqlite3
 from os import environ
 from datetime import date, datetime
-from os.path import expanduser
+from os.path import expanduser, dirname, abspath, join, exists
 
 from time import time
 
 INTERFACE = environ.get('EXTERNAL_INTERFACE', False)
-META_COLUMNS = ['date', 'time', 'timestamp', 'ip', 'port']
+META_COLUMNS = ['date', 'time', 'timestamp', 'ip', 'port', 'friendly_name']
 CACHE = {}
 
 HEARTBEAT_SECONDS = 60 * 60
 _LAST_HEARTBEAT = datetime.now()
+
+
+def starts_with_any(target, prefixes):
+    for prefix in prefixes:
+        if target.startswith(prefix):
+            return True
+    return False
+
+
+def get_config(*args):
+    try:
+        check = [
+            join(dirname(abspath(__file__)), '..', 'common-settings.json'),
+            expanduser(join('~', 'logs', 'common-settings.json')),
+        ]
+        check = [x for x in check if exists(x)]
+        if not check:
+            raise FileNotFoundError('common-settings.json file not found')
+        prefixes = [arg.upper() + '_' for arg in args]
+        with open(check[0]) as f:
+            logging.info('loading config for {} from {}'.format(args, check[0]))
+            return {k: v for (k, v) in json.load(f).items() if starts_with_any(k, prefixes)}
+    except Exception:
+        logging.exception('failed to load config for {}'.format(args))
+        raise
 
 
 def setup_logging(log_filename):
@@ -26,6 +51,7 @@ def setup_logging(log_filename):
         filename=expanduser(f'~/logs/{log_filename}'),
         filemode='a+',
     )
+    logging.getLogger().addHandler(logging.StreamHandler())
 
 
 def heartbeat():
@@ -64,7 +90,11 @@ def process_device(host, data, seen, cache, cursor, tag_name, device_columns):
     })
     keys = ','.join(data.keys())
     questions = ','.join(['?'] * len(data))
-    cursor.execute(f'INSERT INTO {tag_name}({keys}) VALUES ({questions})', tuple(data.values()))
+    try:
+        cursor.execute(f'INSERT INTO {tag_name}({keys}) VALUES ({questions})', tuple(data.values()))
+    except sqlite3.InterfaceError:
+        logging.exception(f"failed to insert data into {tag_name}\n{data}")
+        raise
 
 
 def process_unseen(cursor, seen, tag_name, disconnected_field):
@@ -90,6 +120,12 @@ def main(get_devices_fn, get_host_data_fn, logger, tag_name, device_columns, dis
     conn = sqlite3.connect(expanduser(f'~/logs/{tag_name}.db'))
     conn.cursor().execute(f"""CREATE TABLE IF NOT EXISTS {tag_name} ({",".join(META_COLUMNS + device_columns)})""")
     conn.cursor().execute(f"""CREATE INDEX IF NOT EXISTS ip_port ON {tag_name}(ip, port)""")
+    cursor = conn.cursor()
+    cursor.execute(f"PRAGMA table_info({tag_name})")
+    columns = set(META_COLUMNS + device_columns) - {x[1] for x in cursor.fetchall()}
+    for column in columns:
+        logger.warn(f"adding missing column {column} to {tag_name} table")
+        cursor.execute(f"ALTER TABLE {tag_name} ADD {column} NULL")
 
     seen = set(CACHE.keys())
     cursor = conn.cursor()

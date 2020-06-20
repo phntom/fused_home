@@ -1,26 +1,23 @@
+import logging
 import re
 from time import sleep
 
-import json
-import logging
 import requests
-from os.path import expanduser
 from routeros_api import RouterOsApiPool
 from routeros_api.exceptions import RouterOsApiConnectionError
 
-from common import setup_logging, heartbeat
+from common import setup_logging, heartbeat, get_config
 
 HEARTBEAT_SECONDS = 60 * 60 * 1
 MODEM_USER = 'admin'
-ROUTER_KEY_FILE = '~/.router.key'
 
 session_key_matcher = re.compile(r'.*var sessionkey =[^\d]+(\d+).*', re.DOTALL)
 error_counters_matcher = re.compile(
     r".*<tr align='left'>\n[ \t]*<td height='20'>(\d+)</td>\n[ \t]*<td height='20'>(\d+)</td>.*", re.DOTALL)
 
-with open(expanduser(ROUTER_KEY_FILE)) as f:
-    ROUTER_KEY = json.load(f)
-MODEM_PASSWORD = ROUTER_KEY.pop('MODEM_PASSWORD')
+CONFIG = get_config('router', 'modem')
+ROUTER_KEY = CONFIG['ROUTER_CONFIG']
+MODEM_PASSWORD = CONFIG['MODEM_PASSWORD']
 
 
 def main_loop(session_key, session):

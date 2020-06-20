@@ -1,15 +1,12 @@
-import json
-from os.path import expanduser
-
 import netaddr as netaddr
 from netaddr import IPNetwork
 from routeros_api import RouterOsApiPool
 
-ROUTER_KEY_FILE = '~/.router.key'
+from common import get_config
 
-with open(expanduser(ROUTER_KEY_FILE)) as f:
-    ROUTER_KEY = json.load(f)
-MODEM_PASSWORD = ROUTER_KEY.pop('MODEM_PASSWORD')
+CONFIG = get_config('router', 'modem')
+ROUTER_KEY = CONFIG['ROUTER_CONFIG']
+MODEM_PASSWORD = CONFIG['MODEM_PASSWORD']
 
 router_api = RouterOsApiPool(**ROUTER_KEY).get_api()
 
@@ -32,6 +29,7 @@ hot_lists = {
     'com.amazonaws',
     'com.spotify',
     'com.steampowered',
+    'com.linode.speedtest',
 }
 
 set_routes = set()
