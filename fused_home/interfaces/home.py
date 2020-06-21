@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Sequence, List, Dict
+from typing import Sequence, Dict, List
 
 from interfaces.appliance import Appliance
 from interfaces.lamp import Lamp, ColorLamp
@@ -10,19 +10,19 @@ ORIGIN_HOME = 'TLV'
 
 @dataclass
 class Home:
-    appliances: Sequence[Appliance] = field()
-    active_appliances: Dict[str, Appliance] = field(default=dict)
-    lights: List[Lamp] = field(default=list)
-    color_lights: List[ColorLamp] = field(default=list)
-    sensors: List[Sensor] = field(default=list)
+    appliances: Sequence[Appliance] = field(default_factory=tuple)
+    active_appliances: Dict[str, Appliance] = field(default_factory=dict)
+    lights: List[Lamp] = field(default_factory=list)
+    color_lights: List[ColorLamp] = field(default_factory=list)
+    sensors: List[Sensor] = field(default_factory=list)
 
     def __post_init__(self):
-        for appliance in self.appliances:
-            self.active_appliances[appliance.id] = appliance
-            if isinstance(appliance, Lamp):
-                self.lights.append(appliance)
-            if isinstance(appliance, ColorLamp):
-                self.color_lights.append(appliance)
-            if isinstance(appliance, Sensor):
-                self.sensors.append(appliance)
-
+        for appliance_pre_expand in self.appliances:
+            for appliance in appliance_pre_expand.expand():
+                self.active_appliances[appliance.id] = appliance
+                if isinstance(appliance, Lamp):
+                    self.lights.append(appliance)
+                if isinstance(appliance, ColorLamp):
+                    self.color_lights.append(appliance)
+                if isinstance(appliance, Sensor):
+                    self.sensors.append(appliance)

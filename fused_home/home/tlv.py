@@ -1,9 +1,12 @@
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, field
+from typing import Sequence
 
 from common import secure
 from home.room import Room
-from implementations.xiaomi import Gateway
+from implementations.xiaomi import Gateway, ThermometerSensor, MagnetSensor, MotionSensor, SwitchSensor
 from implementations.yeelight import YeelightColorLamp, YeelightWhiteLamp
+from interfaces.appliance import Appliance
 from interfaces.connection import HostPort
 from interfaces.home import Home
 
@@ -13,7 +16,7 @@ TLV_REMOTE_HOST = secure("ZD8nBBZR")
 
 @dataclass
 class TLV(Home):
-    appliances = (
+    appliances: Sequence[Appliance] = field(default=(
         YeelightWhiteLamp(
             friendly_name="Entrance",
             internal_id="entrance",
@@ -157,6 +160,103 @@ class TLV(Home):
                 local_port=9898,
             ),
             internal_id=secure("9v2wrqcA"),
-            key=secure("jqXSLd39")
+            key=secure("jqXSLd39"),
+            child_devices=(
+                ThermometerSensor(
+                    internal_id=secure('htXYpdRz'),
+                    friendly_name='Living Room',
+                    home=TLV_HOME_ID,
+                    room=Room.LIVING_ROOM,
+                ),
+                ThermometerSensor(
+                    internal_id=secure('cHTAJFV9'),
+                    friendly_name='Outside',
+                    home=TLV_HOME_ID,
+                    room=Room.OUTSIDE,
+                ),
+                ThermometerSensor(
+                    internal_id=secure('1RhB9iq5'),
+                    friendly_name='Bedroom',
+                    home=TLV_HOME_ID,
+                    room=Room.BEDROOM,
+                ),
+                SwitchSensor(
+                    internal_id=secure('lEB2WUMo'),
+                    friendly_name='Bedroom Light',
+                    home=TLV_HOME_ID,
+                    room=Room.BEDROOM,
+                ),
+                SwitchSensor(
+                    internal_id=secure('w6iHYjBq'),
+                    friendly_name='Entrance',
+                    home=TLV_HOME_ID,
+                    room=Room.ENTRANCE,
+                ),
+                SwitchSensor(
+                    internal_id=secure('USjla5rK'),
+                    friendly_name='Living Room',
+                    home=TLV_HOME_ID,
+                    room=Room.LIVING_ROOM,
+                ),
+                MotionSensor(
+                    internal_id=secure('YPlzVafY'),
+                    friendly_name='Kitchen',
+                    home=TLV_HOME_ID,
+                    room=Room.KITCHEN,
+                ),
+                MotionSensor(
+                    internal_id=secure('1phUj4N9'),
+                    friendly_name='Bathroom',
+                    home=TLV_HOME_ID,
+                    room=Room.BATHROOM,
+                ),
+                MotionSensor(
+                    internal_id=secure('IDkcKyz0'),
+                    friendly_name='Entrance',
+                    home=TLV_HOME_ID,
+                    room=Room.ENTRANCE,
+                ),
+                MotionSensor(
+                    internal_id=secure('qRKPircm'),
+                    friendly_name='Living Room',
+                    home=TLV_HOME_ID,
+                    room=Room.LIVING_ROOM,
+                ),
+                SwitchSensor(
+                    internal_id=secure('MSI8dMQG'),
+                    friendly_name='Bedroom AC',
+                    home=TLV_HOME_ID,
+                    room=Room.BEDROOM,
+                ),
+                MotionSensor(
+                    internal_id=secure('cvoXNqgf'),
+                    friendly_name='Bathroom Aft',
+                    home=TLV_HOME_ID,
+                    room=Room.BATHROOM,
+                ),
+                MagnetSensor(
+                    internal_id=secure('tMDVswsX'),
+                    friendly_name='Living Room Window',
+                    home=TLV_HOME_ID,
+                    room=Room.LIVING_ROOM,
+                ),
+                MagnetSensor(
+                    internal_id=secure('ZK5PE0Eh'),
+                    friendly_name='Bedroom Window Right',
+                    home=TLV_HOME_ID,
+                    room=Room.BEDROOM,
+                ),
+                MagnetSensor(
+                    internal_id=secure('eq3mWGYk'),
+                    friendly_name='Bedroom Window Left',
+                    home=TLV_HOME_ID,
+                    room=Room.BEDROOM,
+                ),
+            ),
         ),
-    )
+    ))
+
+
+if __name__ == '__main__':
+    tlv = TLV()
+    print(json.dumps(tlv.sensors, indent=4, default=str))

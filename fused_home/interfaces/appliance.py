@@ -19,6 +19,9 @@ class Appliance:
     def _on_change(self, old_state: dict, new_state: dict):
         raise NotImplemented
 
+    def expand(self):
+        yield self
+
 
 @dataclass
 class OnBattery(Appliance):
