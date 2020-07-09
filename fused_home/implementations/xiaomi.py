@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass, field, asdict
 from itertools import chain
 from typing import Optional, Sequence, Dict
@@ -44,6 +45,24 @@ class SwitchSensor(Switch, GatewayChild):
     pass
 
 
+class ExtendedXiaomiGateway(XiaomiGateway):
+    @property
+    def protocol(self):
+        return int(self.proto[0:1])
+
+    def report(self, sid, model, key1, key2, value):
+        payload = {'cmd': 'write', 'model': model, 'sid': sid}
+        if self.protocol == 1:
+            payload['data'] = {key1: value, 'key': self._get_key()}
+        else:
+            payload['params'] = [{key2: value, 'key': self._get_key()}]
+        cmd = json.dumps(payload, separators=(',', ':'))
+        print(cmd)
+        resp = self._send_cmd(cmd, 'write_ack')
+        print(resp)
+        return self.push_data(resp)
+
+
 @dataclass
 class Gateway(_GatewayMixin, ColorLamp, Lux):
     host_port: HostPort = field(default=HostPort)
@@ -58,7 +77,8 @@ class Gateway(_GatewayMixin, ColorLamp, Lux):
 
     def expand(self):
         host, port = self.host_port.get_pair_for_home(self.home, ORIGIN_HOME)
-        gateway = XiaomiGateway(host, port, self.internal_id, self.key, DISCOVERY_RETRIES, INTERFACE)
+        gateway = ExtendedXiaomiGateway(host, port, self.internal_id, self.key, DISCOVERY_RETRIES, INTERFACE)
+        self._gateway = gateway
 
         for child_device in self.child_devices:
             if child_device.internal_id not in self._children:

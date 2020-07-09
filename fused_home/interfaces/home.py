@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Sequence, Dict, List
 
+from implementations.events import EventBus
 from interfaces.appliance import Appliance
+from interfaces.events import EventBus as EventBusInterface
 from interfaces.lamp import Lamp, ColorLamp
 from interfaces.sensor import Sensor
 
@@ -15,6 +17,7 @@ class Home:
     lights: List[Lamp] = field(default_factory=list)
     color_lights: List[ColorLamp] = field(default_factory=list)
     sensors: List[Sensor] = field(default_factory=list)
+    events: EventBusInterface = field(default_factory=EventBus)
 
     def __post_init__(self):
         for appliance_pre_expand in self.appliances:

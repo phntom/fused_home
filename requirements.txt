@@ -9,3 +9,4 @@ pycrypto
 tldextract
 pywin32;platform_system=="Windows"
 PyXiaomiGateway
+boto3

@@ -35,6 +35,7 @@ class Thermometer(Sensor):
 @dataclass
 class Magnet(Sensor):
     class Status(Enum):
+        UNKNOWN = "unknown"
         CLOSE = "close"
         OPEN = "open"
 

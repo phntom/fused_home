@@ -15,3 +15,6 @@ docker run -d --name fused_home_boiler --net=host -e EXTERNAL_INTERFACE=eth1 -v 
 docker run -d --name fused_home_lights --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m -c 10 --restart on-failure:10 localhost:5000/fused_home python3 fused_home/lights.py
 docker run -d --name fused_home_sensors --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m -c 10 --restart on-failure:10 localhost:5000/fused_home python3 fused_home/sensors.py
 docker run -d --name fused_home_router --net=host -e EXTERNAL_INTERFACE=eth1 -v /mnt/appdata/fused_home/router.key:/root/.router.key -v /mnt/appdata/fused_home/logs/:/root/logs --memory=256m -c 9999 --restart on-failure:9999 localhost:5000/fused_home python3 fused_home/hotbox.py
+
+
+docker run -d --name home-assistant -v /mnt/appdata/hass/config:/config -v /etc/localtime:/etc/localtime:ro --net=host --memory=512m -c 9999 --restart on-failure:9999 localhost:5000/homeassistant/home-assistant:stable

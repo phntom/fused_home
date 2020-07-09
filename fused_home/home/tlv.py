@@ -2,6 +2,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Sequence
 
+from xiaomi_gateway import XiaomiGatewayDiscovery
+
 from common import secure
 from home.room import Room
 from implementations.xiaomi import Gateway, ThermometerSensor, MagnetSensor, MotionSensor, SwitchSensor
