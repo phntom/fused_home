@@ -1,0 +1,6 @@
+docker build . -t nas.home.kix.co.il:5000/nginx-ingress
+docker push nas.home.kix.co.il:5000/nginx-ingress
+
+docker pull localhost:5000/nginx-ingress && \
+docker rm -f nginx-ingress || true && \
+docker run -d --name nginx-ingress --net=host -v /mnt/appdata/nginx-ingress/log:/var/log --memory=256m -c 10 --restart on-failure:10 localhost:5000/nginx-ingress

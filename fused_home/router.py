@@ -13,6 +13,8 @@ router_api = RouterOsApiPool(**ROUTER_KEY).get_api()
 
 route = router_api.get_resource('/ip/route')
 
+ROUTE_DISTANCE = 39
+
 hot_lists = {
     'google',
     'com.instagram',
@@ -35,14 +37,14 @@ hot_lists = {
 
 set_routes = set()
 
-for rrr in route.get(distance='38'):
+for rrr in route.get(distance=str(ROUTE_DISTANCE)):
     set_routes.add(str(rrr['dst-address']))
 
 add_routes = set()
 
 for addr in router_api.get_resource('/ip/firewall/address-list').get():
     if addr['list'] in hot_lists:
-        rng = '.'.join(addr['address'].split('.')[0:2]) + '.0.0/16'
+        rng = addr['address'] + '/32'  # '.'.join(addr['address'].split('.')[0:2]) + '.0.0/16'
         if rng in set_routes:
             continue
         add_routes.add(rng)
@@ -58,7 +60,7 @@ if not new_routes:
 for rng in new_routes:
     print(f"adding route {rng}")
     route.add(gateway='100.96.40.1',
-              distance='38',
+              distance=str(ROUTE_DISTANCE),
               scope='30',
               **{
                   'target-scope': '10',
@@ -66,7 +68,7 @@ for rng in new_routes:
                   'check-gateway': 'ping',
               })
 
-set_routes = {str(rrr['dst-address']) for rrr in route.get(distance='38')}
+set_routes = {str(rrr['dst-address']) for rrr in route.get(distance=str(ROUTE_DISTANCE))}
 minimal_set = {str(x) for x in
                netaddr.cidr_merge([IPNetwork(x) for x in set_routes])}
 set_routes -= minimal_set
