@@ -75,12 +75,12 @@ def add_fast_routes(add_routes, connections):
         if rng in add_routes:
             continue
         if repl_rate > 8192000:
-            print('download speed {}mb for connection {} --> {}'.format(
+            print('download speed {:.2f}mb for connection {} --> {}'.format(
                 repl_rate/8/1024/1024, connection['dst-address'], connection['src-address'])
             )
             add_routes.add(rng)
         if orig_rate > 8192000:
-            print('upload speed {}mb for connection {} --> {}'.format(
+            print('upload speed {:.2f}mb for connection {} --> {}'.format(
                 repl_rate/8/1024/1024, connection['dst-address'], connection['src-address'])
             )
             add_routes.add(rng)
