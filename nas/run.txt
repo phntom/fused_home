@@ -1,3 +1,6 @@
+openssl dhparam -out dhparam.pem 4096
+cp -r ~/.acme.sh/tlv.home.kix.co.il .
+
 docker build . -t nas.home.kix.co.il:5000/nginx-ingress
 docker push nas.home.kix.co.il:5000/nginx-ingress
 

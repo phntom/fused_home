@@ -187,3 +187,5 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
+/nas/tlv.home.kix.co.il/
+/nas/dhparam.pem

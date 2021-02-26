@@ -1,10 +1,10 @@
-FROM nginx:1.18.0-alpine
+FROM nginx:alpine
 
 COPY *.conf /etc/nginx/conf.d/
-COPY dhparam.pem nas.tlv.home.kix.co.il.* /etc/nginx/ssl/
-COPY google397854415bd64264.html /usr/share/nginx/html/
+COPY dhparam.pem tlv.home.kix.co.il/tlv.home.kix.co.il.key tlv.home.kix.co.il/fullchain.cer /etc/nginx/ssl/
 
 RUN mkdir -pv /var/www/letsencrypt/nas && \
   mkdir -pv /var/www/letsencrypt/hass && \
   mkdir -pv /var/www/letsencrypt/grafana && \
-  nginx -t
+  nginx -t && \
+  touch /usr/share/nginx/html/google397854415bd64264.html
